@@ -546,7 +546,7 @@ The demonstration configuration uses **DeepSeek Conversation** as its AI agent.
 
 **ecoMain** is part of the enecess smart energy management ecosystem.
 
-Visit the official enecess website for more information about ecoMain and related energy-management products.
+Visit the official enecess website for more information about ecoMain and related energy-management products.https://www.enecess.com/
 
 ---
 
