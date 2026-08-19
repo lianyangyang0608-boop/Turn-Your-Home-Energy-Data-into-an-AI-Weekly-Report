@@ -17,10 +17,7 @@ The result is a weekly report that helps users quickly understand:
 - What energy-use patterns are worth paying attention to
 - What practical actions could be considered next
 
-> **[IMAGE 1 — Hero Image]**
->
-> Suggested image: Final ecoMain AI Energy Dashboard  
-> Suggested caption: *ecoMain AI Weekly Energy Report in Home Assistant*
+![ecoMain AI Energy Dashboard](images/Hero.png)
 
 ---
 
@@ -34,30 +31,7 @@ The workflow combines three layers:
 
 **AI** interprets the structured data and converts it into concise, human-readable energy insights.
 
-```text
-ecoMain
-   ↓
-Home Assistant
-   ↓
-Weekly Energy Statistics
-   ↓
-Current Week ↔ Previous Week
-   ↓
-AI Energy Analysis
-   ↓
-Weekly Energy Report
-   ↓
-Dashboard + Recommendations
-```
-
-> **[IMAGE 2 — System Architecture]**
->
-> Suggested image:
->
-> `ecoMain → Home Assistant → Weekly Statistics → AI → Weekly Report`
->
-> Suggested output labels:
-> `Daily Energy / Circuit Breakdown / Week-on-Week / AI Insights`
+![ecoMain AI Energy Workflow](images/workflow.png)
 
 The AI does not replace energy measurement or statistical processing.
 
@@ -77,9 +51,7 @@ The system uses:
 
 The energy entities are recorded by Home Assistant and can be accessed through its historical and long-term statistics.
 
-> **[IMAGE 3 — ecoMain Entities in Home Assistant]**
->
-> Suggested image: Home Assistant entity or statistics page showing ecoMain energy sensors.
+![Monitored Circuit Statistics](images/Blueprint-Setup.png)
 
 Because each monitored circuit is available independently, the system can go beyond a single total-energy value and identify how monitored energy consumption is distributed across different circuits.
 
@@ -174,12 +146,6 @@ In our demonstration dataset:
 | Week-on-Week | -36.1% |
 | Reporting Period | Aug 10 – Aug 16, 2026 |
 
-> **[IMAGE 4 — Weekly KPI Cards]**
->
-> Suggested image:
->
-> `This Week / Previous Week / Week-on-Week / Reporting Period`
-
 These KPIs give the user a quick overview before they move into the detailed energy analysis.
 
 ---
@@ -191,10 +157,6 @@ Weekly totals tell only part of the story.
 The dashboard also visualizes daily energy consumption so users can see how energy use changes across the week.
 
 In this example, daily site energy consumption varied significantly across the reporting period, with clear high- and low-consumption days.
-
-> **[IMAGE 5 — Daily Energy Chart]**
->
-> Suggested image: Home Assistant daily energy bar chart.
 
 The AI can summarize this pattern in a short sentence rather than requiring the user to interpret the chart manually.
 
@@ -221,10 +183,6 @@ For example:
 
 In this dataset, CH4 and CH1 represent most of the energy measured across the normal monitored circuits.
 
-> **[IMAGE 6 — Circuit Breakdown]**
->
-> Suggested image: Circuit Breakdown card from the Home Assistant dashboard.
-
 This gives the AI more useful context than a single site-level energy value.
 
 Instead of only reporting:
@@ -242,10 +200,6 @@ Not every circuit needs to be interpreted in the same way.
 In this demonstration, **CH7 is used as an R&D test circuit**.
 
 It is therefore displayed separately from the normal monitored circuits.
-
-> **[IMAGE 7 — R&D Test Load]**
->
-> Suggested image: CH7 R&D Test Load card.
 
 CH7 is excluded from:
 
@@ -272,10 +226,6 @@ This Week        109.16 kWh
 Previous Week    170.74 kWh
 Week-on-Week     -36.1%
 ```
-
-> **[IMAGE 8 — Week-on-Week Comparison]**
->
-> Suggested image: Three comparison cards from the dashboard.
 
 In this example, total measured site energy consumption decreased by **36.1%** compared with the previous week.
 
@@ -330,9 +280,6 @@ For the dashboard, the longer report is condensed into three short insights.
 
 > Total site energy decreased 36.1% compared with the previous week.
 
-> **[IMAGE 9 — AI Energy Insights]**
->
-> Suggested image: Three AI Energy Insights cards.
 
 This creates a different experience from a conventional energy dashboard.
 
@@ -374,10 +321,6 @@ If the available data does not provide enough evidence to confirm abnormal energ
 
 This helps reduce overinterpretation of normal changes in energy consumption.
 
-> **[IMAGE 10 — Complete AI Weekly Report]**
->
-> Suggested image: Screenshot or designed mock-up of the full weekly report.
-
 ---
 
 # 10. Save the Results for the Dashboard
@@ -400,12 +343,6 @@ AI Week-on-Week Insight
 ```
 
 The result is a dashboard that remains readable even after the automation has finished running.
-
-> **[IMAGE 11 — Dashboard Data Flow]**
->
-> Suggested diagram:
->
-> `Recorder → Weekly Statistics → Helpers → Dashboard`
 
 ---
 
@@ -444,10 +381,6 @@ Update Dashboard Values
      ↓
 Create Weekly Energy Report
 ```
-
-> **[IMAGE 12 — Automation Workflow]**
->
-> Suggested image: Clean workflow diagram rather than a screenshot of the full YAML.
 
 No fixed reporting dates are required.
 
@@ -491,33 +424,6 @@ For a similar setup, the basic components are:
 - A Home Assistant dashboard
 
 ---
-
-# Example Project Structure
-
-For GitHub, we recommend organizing the project like this:
-
-```text
-ecomain-ai-weekly-energy-report/
-│
-├── README.md
-│
-├── automation/
-│   └── weekly_energy_report.yaml
-│
-├── dashboard/
-│   └── dashboard.yaml
-│
-└── images/
-    ├── hero.png
-    ├── architecture.png
-    ├── weekly-kpi.png
-    ├── daily-energy.png
-    ├── circuit-breakdown.png
-    ├── rnd-test-load.png
-    ├── week-on-week.png
-    ├── ai-insights.png
-    └── full-dashboard.png
-```
 
 ---
 
@@ -590,18 +496,6 @@ This project demonstrates an **ecoMain + Home Assistant + AI** energy-analysis w
 AI-generated insights depend on the available measurement data and should not be treated as confirmed equipment-fault diagnostics.
 
 The example data shown in this project comes from a development and demonstration environment. Special test loads are separated from normal monitored-circuit analysis where appropriate.
-
----
-
-## License
-
-Add your preferred license here if you plan to make the automation reusable.
-
-For example:
-
-```text
-MIT License
-```
 
 ---
 
