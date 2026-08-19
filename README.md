@@ -1,81 +1,237 @@
-# Turn Your Home Energy Data into an AI Weekly Report
+# ⚡ Turn Your Home Energy Data into an AI Weekly Report
 
-### Build an automated energy analysis workflow with ecoMain, Home Assistant and AI
+### Automated energy insights with ecoMain, Home Assistant and AI
 
-Energy monitoring gives you data — but understanding what that data means still takes time.
+Energy monitoring gives you data.
 
-With **ecoMain**, **Home Assistant** and an AI conversation agent, you can turn raw household or site energy measurements into an automatically generated weekly energy report.
+But understanding what that data means still takes time.
 
-In this example, Home Assistant collects energy statistics from ecoMain, compares the latest complete week with the previous week, sends the structured data to an AI agent for interpretation, and presents the results in a simple dashboard.
+This project turns **ecoMain energy measurements** into an automatically generated **AI Weekly Energy Report** using Home Assistant and a compatible AI conversation agent.
 
-The result is a weekly report that helps users quickly understand:
+The workflow automatically:
 
-- How much energy was used this week
-- How consumption changed day by day
-- Which monitored circuits consumed the most energy
-- How this week compares with the previous week
-- What energy-use patterns are worth paying attention to
-- What practical actions could be considered next
+- collects the latest complete week of energy data
+- compares it with the previous week
+- analyzes monitored circuit consumption
+- identifies meaningful energy-use patterns
+- generates AI-powered insights and recommendations
+- delivers a complete weekly energy report
 
 ![ecoMain AI Energy Dashboard](images/Hero.png)
 
----
-
-## How It Works
-
-The workflow combines three layers:
-
-**ecoMain** provides the energy monitoring data.
-
-**Home Assistant** handles historical statistics, automation, weekly comparison and dashboard visualization.
-
-**AI** interprets the structured data and converts it into concise, human-readable energy insights.
-
-![ecoMain AI Energy Workflow](images/workflow.png)
-
-The AI does not replace energy measurement or statistical processing.
-
-ecoMain provides the measured data, while Home Assistant first organizes the data into structured weekly statistics. The AI then works as an interpretation layer on top of those statistics.
+> **Dashboard shown for demonstration purposes.**
+>
+> The Blueprint generates the weekly energy analysis and report automatically.
+> The dashboard above is an optional visualization layer and is not required to use the Blueprint.
 
 ---
 
-# 1. Collect Energy Data with ecoMain
+# ✨ What It Does
 
-In this example, ecoMain is integrated with Home Assistant and provides both total energy consumption and individual monitored circuit data.
+Every Monday, the automation automatically analyzes the previous complete week.
 
-The system uses:
+```text
+ecoMain
+   ↓
+Home Assistant Statistics
+   ↓
+Weekly Energy Analysis
+   ↓
+AI Conversation Agent
+   ↓
+Weekly Energy Report
+```
 
-- `main_all` — total site forward energy consumption
-- `CH1–CH10` — individual monitored circuits
-- `CH7` — an R&D test load in this demonstration
+The report helps answer questions such as:
 
-The energy entities are recorded by Home Assistant and can be accessed through its historical and long-term statistics.
-
-![Monitored Circuit Statistics](images/Blueprint-Setup.png)
-
-Because each monitored circuit is available independently, the system can go beyond a single total-energy value and identify how monitored energy consumption is distributed across different circuits.
+- How much energy did I use this week?
+- Which day consumed the most energy?
+- Which monitored circuits dominated consumption?
+- How did this week compare with last week?
+- Were there any patterns worth paying attention to?
+- What practical actions could be considered next?
 
 ---
 
-# 2. Automatically Select the Weekly Reporting Period
+# 🧠 How It Works
 
-The automation does not use fixed dates.
+The system combines three layers:
 
-Every Monday, Home Assistant automatically identifies the previous complete Monday–Sunday period and the week before it.
+### ⚡ ecoMain — Energy Data Layer
+
+ecoMain provides total and circuit-level energy measurements.
+
+### 🏠 Home Assistant — Automation Layer
+
+Home Assistant:
+
+- stores historical statistics
+- selects the reporting period
+- calculates weekly values
+- compares consecutive weeks
+- sends structured data to the AI agent
+- generates the final report
+
+### 🤖 AI — Intelligence Layer
+
+The AI interprets the structured statistics and converts them into concise, human-readable energy insights.
+
+![ecoMain AI Workflow](images/workflow.png)
+
+The AI does **not** replace energy measurement or statistical processing.
+
+**ecoMain measures → Home Assistant calculates → AI interprets.**
+
+---
+
+# 📦 What You Need
+
+Before importing the Blueprint, you need:
+
+- **ecoMain** energy monitor
+- **Home Assistant**
+- ecoMain energy entities available in Home Assistant
+- Home Assistant Recorder / statistics
+- a compatible **Home Assistant Conversation Agent**
+- an API key or local model required by your selected AI provider
+- **HACS** if your chosen AI integration is installed through HACS
+
+The dashboard shown in this repository is optional.
+
+---
+
+# 🤖 AI Conversation Agent
+
+The Blueprint uses Home Assistant's `conversation.process` action to send the weekly energy statistics to a selected Conversation Agent.
+
+This means the project is **not tied to one specific AI model**.
+
+## DeepSeek used in this demo
+
+The demonstration shown in this repository uses **DeepSeek Conversation** as the AI conversation agent.
+
+If you want to reproduce the same setup, install a compatible DeepSeek Conversation integration through HACS.
+
+### Example installation
+
+1. Install **HACS** if it is not already available.
+2. Open **HACS → Integrations**.
+3. Install a compatible **DeepSeek Conversation** integration.
+4. Restart Home Assistant.
+5. Open:
+
+```text
+Settings
+→ Devices & Services
+→ Add Integration
+```
+
+6. Add and configure **DeepSeek Conversation**.
+7. Enter your DeepSeek API key.
+8. Make sure the DeepSeek Conversation Agent is available in Home Assistant.
+9. Select it when configuring this Blueprint.
+
+> **Important**
+>
+> DeepSeek is the AI provider used in this demonstration, but it is not a hard requirement of the Blueprint.
+>
+> Another compatible Home Assistant Conversation Agent can be selected instead.
+
+---
+
+# 🚀 Import the Blueprint
+
+Import the Blueprint into Home Assistant and create a new automation from it.
+
+The setup interface allows you to select your own ecoMain entities and AI Conversation Agent.
+
+![Blueprint Setup](images/Blueprint-Setup.png)
+
+The Blueprint does not require the entity IDs used in this demonstration.
+
+Instead, select the appropriate sensors from **your own ecoMain installation**.
+
+---
+
+# ⚙️ Blueprint Configuration
+
+## 1. Main Energy Statistic
+
+Select the ecoMain statistic representing the total site energy consumption.
 
 For example:
 
 ```text
-Current Report
-Aug 10 – Aug 16, 2026
-
-Previous Report
-Aug 03 – Aug 09, 2026
+main_all
 ```
 
-The reporting periods therefore update automatically every week.
+This value is used for:
 
-The date logic is handled directly inside the automation:
+- weekly total
+- daily average
+- highest-consumption day
+- lowest-consumption day
+- week-on-week comparison
+
+---
+
+## 2. Monitored Circuit Statistics
+
+Select the circuit statistics you want included in the weekly circuit analysis.
+
+Only select circuits that you want the AI to analyze as normal monitored loads.
+
+The Blueprint does not assume what appliances are connected to these circuits.
+
+---
+
+## 3. Optional Test / Special Load
+
+Some installations may contain temporary, experimental or otherwise special loads.
+
+These can be excluded from normal circuit analysis.
+
+In the development environment used for this project, one circuit was used as an **R&D test load** and therefore treated separately.
+
+This is specific to the demonstration environment.
+
+Your installation may not require a special-load circuit at all.
+
+---
+
+## 4. AI Conversation Agent
+
+Select the Conversation Agent that should analyze the weekly statistics.
+
+For this demonstration:
+
+```text
+DeepSeek Conversation
+```
+
+You may select another compatible agent instead.
+
+---
+
+# 📅 Automatic Weekly Reporting
+
+The automation runs every Monday and analyzes the previous complete Monday–Sunday period.
+
+For example:
+
+```text
+Monday Aug 17
+      ↓
+Analyze Aug 10 – Aug 16
+      ↓
+Compare with Aug 03 – Aug 09
+```
+
+The dates are calculated automatically.
+
+No manual reporting-period updates are required.
+
+A simplified version of the date logic is:
 
 ```yaml
 - variables:
@@ -92,391 +248,306 @@ The date logic is handled directly inside the automation:
       {{ today_at("00:00") - timedelta(days=now().weekday() + 7) }}
 ```
 
-This means the user does not need to manually change the reporting dates each week.
-
 ---
 
-# 3. Retrieve Weekly ecoMain Statistics
+# 📊 What Gets Analyzed?
 
-Home Assistant retrieves daily energy statistics from ecoMain using `recorder.get_statistics`.
+Home Assistant retrieves daily statistics from ecoMain using `recorder.get_statistics`.
 
-A simplified example:
+From those statistics, the workflow calculates:
 
-```yaml
-- action: recorder.get_statistics
-  data:
-    start_time: "{{ week_start }}"
-    end_time: "{{ week_end }}"
-    period: day
-    statistic_ids:
-      - sensor.ecomain_device_main_all_energy_fwd_total
-      - sensor.ecomain_device_main_ch1_energy_fwd_total
-      - sensor.ecomain_device_main_ch2_energy_fwd_total
-      - sensor.ecomain_device_main_ch3_energy_fwd_total
-    types:
-      - change
-  response_variable: current_stats
-```
-
-The same process is repeated for the previous week.
-
-This gives Home Assistant the information needed for:
-
-- Current-week energy totals
-- Daily energy consumption
-- Circuit-level energy consumption
-- Week-on-week comparison
-
-> **Note**
->
-> Replace the example entity IDs with the entity IDs from your own ecoMain installation.
-
----
-
-# 4. Understand This Week at a Glance
-
-The first part of the dashboard focuses on a few headline metrics that can be understood immediately.
-
-In our demonstration dataset:
-
-| Metric | Result |
-|---|---:|
-| This Week | 109.16 kWh |
-| Previous Week | 170.74 kWh |
-| Week-on-Week | -36.1% |
-| Reporting Period | Aug 10 – Aug 16, 2026 |
-
-These KPIs give the user a quick overview before they move into the detailed energy analysis.
-
----
-
-# 5. See the Daily Energy Pattern
-
-Weekly totals tell only part of the story.
-
-The dashboard also visualizes daily energy consumption so users can see how energy use changes across the week.
-
-In this example, daily site energy consumption varied significantly across the reporting period, with clear high- and low-consumption days.
-
-The AI can summarize this pattern in a short sentence rather than requiring the user to interpret the chart manually.
-
-For example:
-
-> Daily use ranged from 3.97 kWh to 23.69 kWh, with a sharp dip on Aug 11 and a peak on Aug 13.
-
-The system describes what the data shows without automatically treating every peak or dip as a fault.
-
----
-
-# 6. Break Energy Use Down by Circuit
-
-ecoMain's circuit-level monitoring allows the weekly report to show where monitored energy consumption is concentrated.
-
-For example:
-
-| Circuit | Weekly Energy |
-|---|---:|
-| CH4 | 53.37 kWh |
-| CH1 | 39.02 kWh |
-| CH6 | 1.92 kWh |
-| CH2 / CH3 / CH8 / CH9 / CH10 | No recorded use |
-
-In this dataset, CH4 and CH1 represent most of the energy measured across the normal monitored circuits.
-
-This gives the AI more useful context than a single site-level energy value.
-
-Instead of only reporting:
-
-> "Your total energy use was 109.16 kWh."
-
-the system can also explain where monitored consumption was concentrated.
-
----
-
-## Separating Special Loads
-
-Not every circuit needs to be interpreted in the same way.
-
-In this demonstration, **CH7 is used as an R&D test circuit**.
-
-It is therefore displayed separately from the normal monitored circuits.
-
-CH7 is excluded from:
-
-- Normal monitored-circuit rankings
-- Normal anomaly assessment
-- Energy-saving recommendations
-
-This prevents the AI from incorrectly interpreting a known test load as normal household or site energy use.
-
----
-
-# 7. Compare This Week with Last Week
-
-A single week can show what happened.
-
-Two weeks provide context.
-
-Home Assistant automatically calculates the week-on-week change.
-
-For example:
+### Weekly KPIs
 
 ```text
-This Week        109.16 kWh
-Previous Week    170.74 kWh
-Week-on-Week     -36.1%
+This Week
+Previous Week
+Week-on-Week Change
 ```
 
-In this example, total measured site energy consumption decreased by **36.1%** compared with the previous week.
+### Daily Energy
 
-The comparison can also be used to identify which monitored circuits changed the most between the two reporting periods.
+The report identifies:
 
-This provides a much stronger basis for energy interpretation than looking at a single week in isolation.
+```text
+Daily energy consumption
+Highest-consumption day
+Lowest-consumption day
+Daily consumption pattern
+```
+
+### Circuit Breakdown
+
+Selected circuits are compared to identify:
+
+```text
+Highest-consumption circuits
+Circuit energy distribution
+Inactive / zero-use circuits
+Meaningful week-on-week changes
+```
 
 ---
 
-# 8. Turn Weekly Statistics into AI Energy Insights
+# 🧠 AI Energy Insights
 
-This is where the AI layer becomes useful.
+After Home Assistant finishes the statistical processing, the structured results are sent to the selected AI Conversation Agent.
 
-Home Assistant sends the current-week and previous-week ecoMain statistics to the configured conversation agent.
-
-A simplified version looks like this:
-
-```yaml
-- action: conversation.process
-  data:
-    agent_id: conversation.deepseek
-    text: >
-      Analyze the current and previous week's
-      ecoMain energy statistics.
-
-      Identify:
-      - current-week consumption pattern
-      - major circuit pattern
-      - week-on-week changes
-      - abnormal energy use only when supported by data
-      - practical energy-management recommendations
-```
-
-The AI is instructed not to invent:
-
-- Appliance identities
-- Operating reasons
-- Equipment faults
-- Unsupported savings estimates
-
-For the dashboard, the longer report is condensed into three short insights.
+The AI is asked to interpret:
 
 ### Weekly Pattern
 
-> Daily use ranged 3.97–23.69 kWh with a sharp dip on Aug 11 and a peak on Aug 13.
+How consumption changed across the week.
 
 ### Circuit Pattern
 
-> CH4 and CH1 accounted for most normal monitored-circuit energy during the week.
+Where monitored energy consumption was concentrated.
 
-### Week-on-Week
+### Week-on-Week Pattern
 
-> Total site energy decreased 36.1% compared with the previous week.
+How the latest week differed from the previous week.
 
+The AI is explicitly instructed **not to invent**:
 
-This creates a different experience from a conventional energy dashboard.
+- appliance identities
+- operating reasons
+- equipment faults
+- unsupported anomaly explanations
+- unsupported savings estimates
 
-The dashboard does not only show **what the numbers are**.
+For example:
 
-It also helps the user understand **what changed, where the energy was concentrated, and what deserves attention next**.
+> **Weekly Pattern**  
+> Daily use ranged from 3.97–23.69 kWh, with a clear mid-week peak.
+
+> **Circuit Pattern**  
+> Two monitored circuits accounted for most normal monitored energy consumption.
+
+> **Week-on-Week**  
+> Total site energy decreased compared with the previous reporting period.
+
+The goal is not to make the AI diagnose the electrical system.
+
+The goal is to make weekly energy data **easier to understand**.
 
 ---
 
-# 9. Generate a Complete Weekly Energy Report
+# 📄 Complete Weekly Energy Report
 
-The dashboard insights are designed for quick reading.
+In addition to short insights, the automation generates a complete weekly report.
 
-At the same time, the AI generates a more detailed weekly report.
+![ecoMain Weekly Energy Report](images/ecomain_weekly_energy_report.png)
 
-The report includes:
+The report contains:
 
 1. **This Week at a Glance**
 2. **Daily Energy**
 3. **Circuit Breakdown**
 4. **Week-on-Week Comparison**
-5. **R&D Test Load**
+5. **Special / Test Load**, if configured
 6. **AI Insights**
 7. **Abnormal Use Assessment**
 8. **Recommendations**
 
-An example report can highlight:
+If the available data does not provide enough evidence to identify abnormal energy use, the AI is instructed to avoid overdiagnosis.
 
-- Total weekly site energy consumption
-- Highest and lowest daily consumption
-- Dominant monitored circuits
-- Week-on-week changes
-- Patterns worth continuing to monitor
-- Practical next steps
-
-If the available data does not provide enough evidence to confirm abnormal energy use, the AI is instructed to state:
+For example:
 
 > **No confirmed abnormal energy use was detected.**
-![ecoMain AI Energy Dashboard](images/ecomain_weekly_energy_report.png)
-This helps reduce overinterpretation of normal changes in energy consumption.
 
 ---
 
-# 10. Save the Results for the Dashboard
+# 📈 Optional Dashboard
 
-The automation calculates and stores key values in Home Assistant helpers so that the dashboard can display the latest weekly report at any time.
+The Blueprint's primary output is the **AI Weekly Energy Report**.
 
-Examples include:
+The dashboard shown at the beginning of this repository is an additional visualization built on top of the generated statistics.
+
+It can be used to display:
 
 ```text
-This Week Energy
+Weekly Energy
 Previous Week Energy
 Week-on-Week Change
-Reporting Period
-CH1 Weekly Energy
-CH4 Weekly Energy
-CH7 R&D Test Energy
+
+Daily Energy Chart
+
+Circuit Overview
+
 AI Weekly Pattern
 AI Circuit Pattern
 AI Week-on-Week Insight
 ```
 
-The result is a dashboard that remains readable even after the automation has finished running.
+The dashboard is **not required** for the Blueprint to operate.
+
+This keeps the Blueprint easier to reuse across different Home Assistant installations and dashboard layouts.
+
+A reusable dashboard configuration may be added separately in the future.
 
 ---
 
-# 11. Run the Workflow Automatically Every Monday
+# 🏠 From Energy Monitoring to Energy Understanding
 
-Once configured, the workflow can run automatically once per week.
+Traditional energy monitoring answers:
 
-```yaml
-triggers:
-  - trigger: time
-    at: "08:00:00"
+> **How much electricity did I use?**
 
-conditions:
-  - condition: template
-    value_template: "{{ now().weekday() == 0 }}"
-```
+Adding historical comparison and AI interpretation allows the system to also ask:
 
-The complete process becomes:
+> **How did my consumption change?**
+
+> **Where was monitored energy concentrated?**
+
+> **What changed compared with last week?**
+
+> **What should I pay attention to next?**
+
+The architecture can be summarized as:
 
 ```text
-Monday 08:00
-     ↓
-Determine Previous Complete Week
-     ↓
-Retrieve ecoMain Statistics
-     ↓
-Retrieve Previous-Week Statistics
-     ↓
-Calculate Weekly KPIs
-     ↓
-Send Energy Data to AI
-     ↓
-Generate Weekly Insights
-     ↓
-Update Dashboard Values
-     ↓
-Create Weekly Energy Report
+Measure
+   ↓
+Organize
+   ↓
+Compare
+   ↓
+Understand
+   ↓
+Act
 ```
 
-No fixed reporting dates are required.
+With:
 
-As new ecoMain data is recorded, the next weekly report automatically moves to the latest complete reporting period.
+```text
+ecoMain=Energy Data Layer
 
----
+Home Assistant=Automation & Integration Layer
 
-# From Energy Monitoring to Energy Understanding
-
-Energy monitoring is most useful when data leads to understanding.
-
-In this example:
-
-**ecoMain** acts as the **energy data layer**, providing total and circuit-level measurements.
-
-**Home Assistant** acts as the **automation and integration layer**, organizing historical statistics, calculating weekly values and updating the dashboard.
-
-**AI** acts as the **intelligence layer**, turning structured energy data into concise explanations and recommendations.
-
-Together, the workflow moves from:
-
-> **Measure → Organize → Compare → Understand → Act**
-
-This architecture also means the concept is not limited to one specific AI model.
-
-The energy data and Home Assistant automation remain the same, while the AI layer can potentially be replaced with another compatible cloud or local conversation agent.
+AI=Interpretation Layer
+```
 
 ---
 
-# What You Need
+# 🔌 Why the AI Layer Is Replaceable
 
-For a similar setup, the basic components are:
+The energy analysis architecture is intentionally separated from the AI provider.
 
-- **ecoMain** energy monitor
-- **Home Assistant**
-- ecoMain energy entities available in Home Assistant
-- Home Assistant Recorder / statistics
-- A compatible AI conversation agent
-- Home Assistant automation
-- Dashboard helpers
-- A Home Assistant dashboard
+Home Assistant performs the deterministic work:
+
+```text
+Historical data retrieval
+Reporting period selection
+Weekly calculations
+Week-on-week comparison
+```
+
+The AI receives the resulting structured information afterward.
+
+Therefore:
+
+```text
+ecoMain + Home Assistant
+          │
+          ▼
+   Structured Energy Data
+          │
+          ▼
+ Conversation Agent
+```
+
+DeepSeek can be replaced by another compatible Conversation Agent without changing the fundamental energy-monitoring architecture.
 
 ---
 
----
-
-# What's Next?
+# 🔮 What's Next?
 
 This example focuses on weekly electricity consumption and circuit-level analysis.
 
-The same architecture could be extended with additional energy information such as:
+The same architecture could later be extended to include:
 
-- Solar generation
-- Grid import and export
-- Battery charging and discharging
-- EV charging
-- Electricity tariffs
-- Monthly energy reports
-- Energy-cost analysis
-- Carbon-emission estimates
+- ☀️ Solar generation
+- 🔌 Grid import and export
+- 🔋 Battery charging and discharging
+- 🚗 EV charging
+- 💰 Electricity tariffs
+- 📅 Monthly energy reports
+- 💵 Energy-cost analysis
+- 🌱 Carbon-emission estimates
 
-With richer energy data, the AI layer can move beyond weekly reporting toward more context-aware residential energy management.
-
----
-
-# Build Your Own
-
-The complete Home Assistant automation used in this demonstration can be shared as a reusable example for ecoMain users.
-
-> **GitHub / Blueprint link to be added**
-
-To adapt the example:
-
-1. Replace the example ecoMain entity IDs with your own entities.
-2. Connect your preferred compatible AI conversation agent.
-3. Create the required Home Assistant helpers.
-4. Add the dashboard cards.
-5. Run the automation manually once for testing.
-6. Enable the weekly Monday schedule.
+With richer energy data, the same architecture could evolve from weekly reporting toward more context-aware residential energy management.
 
 ---
 
-## Notes
+# 🛠️ Build Your Own
+
+To reproduce the project:
+
+1. Connect ecoMain to Home Assistant.
+2. Confirm that ecoMain energy statistics are available.
+3. Install and configure a compatible AI Conversation Agent.
+4. Import the Blueprint.
+5. Select your main energy statistic.
+6. Select the monitored circuits you want analyzed.
+7. Select the AI Conversation Agent.
+8. Create the automation.
+9. Run it manually once for testing.
+10. Enable the weekly schedule.
+
+That's it.
+
+Every week:
+
+```text
+ecoMain data
+      ↓
+Home Assistant
+      ↓
+AI analysis
+      ↓
+Weekly Energy Report
+```
+
+---
+
+# ⚠️ Notes
 
 This project demonstrates an **ecoMain + Home Assistant + AI** energy-analysis workflow.
 
-AI-generated insights depend on the available measurement data and should not be treated as confirmed equipment-fault diagnostics.
+AI-generated insights depend on the quality and availability of the underlying measurement data.
 
-The example data shown in this project comes from a development and demonstration environment. Special test loads are separated from normal monitored-circuit analysis where appropriate.
+They should not be treated as confirmed:
+
+- electrical faults
+- equipment diagnostics
+- appliance identification
+- professional energy audits
+
+The demonstration data in this repository comes from a development and testing environment.
+
+Your circuit configuration and energy-use patterns will be different.
 
 ---
 
-## About enecess
+# 🙏 Acknowledgements
 
-ecoMain is part of the enecess smart energy management ecosystem.
+This project uses:
 
-For more information about ecoMain and related energy-management products, visit the official enecess website.
-https://www.enecess.com/
-```
+- **ecoMain** for energy monitoring
+- **Home Assistant** for statistics, automation and visualization
+- a compatible **AI Conversation Agent** for energy-data interpretation
+
+The demonstration configuration uses **DeepSeek Conversation** as its AI agent.
+
+---
+
+# About enecess
+
+**ecoMain** is part of the enecess smart energy management ecosystem.
+
+Visit the official enecess website for more information about ecoMain and related energy-management products.
+
+---
+
+### ⚡ ecoMain × Home Assistant × AI
+
+**Turn energy data into something you can understand and act on.**
