@@ -1,368 +1,378 @@
-alias: ecoMain Weekly Energy Report
-description: Auto weekly ecoMain energy report with DeepSeek analysis.
+blueprint:
+  name: ecoMain AI Weekly Energy Report
+  description: >
+    Automatically generate a weekly AI energy report from ecoMain energy
+    statistics in Home Assistant.
+
+    Every Monday, this blueprint analyzes the previous complete Monday-Sunday
+    period, compares it with the week before, and sends the data to a selected
+    Home Assistant conversation agent.
+
+    The report includes:
+    - Weekly energy overview
+    - Daily energy pattern
+    - Circuit-level analysis
+    - Week-on-week comparison
+    - AI insights
+    - Abnormal-use assessment
+    - Practical recommendations
+
+    Requirements:
+    - ecoMain energy statistics available in Home Assistant
+    - Long-term statistics enabled for the selected sensors
+    - A configured Home Assistant conversation agent
+
+  domain: automation
+
+  input:
+
+    main_energy:
+      name: Total Energy Statistic
+      description: >
+        Select the ecoMain statistic representing total site or household
+        forward energy consumption (main_all).
+      selector:
+        statistic:
+
+    monitored_circuits:
+      name: Monitored Circuit Statistics
+      description: >
+        Select the ecoMain circuit energy statistics you want included in the
+        weekly circuit analysis. Select CH1, CH2, CH3, etc. as appropriate.
+        Do not select temporary test loads unless you want them analyzed.
+      selector:
+        statistic:
+          multiple: true
+
+    ai_agent:
+      name: AI Conversation Agent
+      description: >
+        Select the Home Assistant conversation agent that should generate
+        the weekly energy report.
+      selector:
+        conversation_agent:
+
+    report_time:
+      name: Weekly Report Time
+      description: >
+        Time on Monday when the weekly report should be generated.
+      default: "08:00:00"
+      selector:
+        time:
+
+    site_name:
+      name: Site Name
+      description: >
+        Optional name shown in the AI report, for example "Home",
+        "Apartment" or "Demo House".
+      default: "Home"
+      selector:
+        text:
+
+    extra_context:
+      name: Optional Energy Context
+      description: >
+        Optional context for the AI, such as known circuit identities.
+        Example: "CH1 = heat pump, CH4 = EV charger".
+        Leave blank if circuit identities are unknown.
+      default: ""
+      selector:
+        text:
+          multiline: true
+
+
+# =========================================================
+# Trigger: every day at selected time
+# Condition below limits execution to Monday
+# =========================================================
+
 triggers:
   - trigger: time
-    at: "08:00:00"
+    at: !input report_time
+
 conditions:
   - condition: template
     value_template: "{{ now().weekday() == 0 }}"
+
+
+# =========================================================
+# Blueprint inputs exposed as template variables
+# =========================================================
+
+variables:
+
+  main_stat: !input main_energy
+  circuit_stats: !input monitored_circuits
+  site_name_value: !input site_name
+  extra_context_value: !input extra_context
+
+  week_start: >
+    {{ today_at("00:00") - timedelta(days=7) }}
+
+  week_end: >
+    {{ today_at("00:00") }}
+
+  previous_week_start: >
+    {{ today_at("00:00") - timedelta(days=14) }}
+
+  previous_week_end: >
+    {{ today_at("00:00") - timedelta(days=7) }}
+
+  week_label: >
+    {{
+      (today_at("00:00") - timedelta(days=7)).strftime('%b %d')
+    }} – {{
+      (today_at("00:00") - timedelta(days=1)).strftime('%b %d, %Y')
+    }}
+
+  previous_week_label: >
+    {{
+      (today_at("00:00") - timedelta(days=14)).strftime('%b %d')
+    }} – {{
+      (today_at("00:00") - timedelta(days=8)).strftime('%b %d, %Y')
+    }}
+
+
 actions:
-  - variables:
-      week_start: |
-        {{ today_at("00:00") - timedelta(days=now().weekday() + 7) }}
-      week_end: |
-        {{ today_at("00:00") - timedelta(days=now().weekday()) }}
-      prev_start: |
-        {{ today_at("00:00") - timedelta(days=now().weekday() + 14) }}
-      prev_end: |
-        {{ today_at("00:00") - timedelta(days=now().weekday() + 7) }}
-      week_label: |
-        {{
-          (today_at("00:00") - timedelta(days=now().weekday() + 7)).strftime('%b %d')
-        }} – {{
-          (today_at("00:00") - timedelta(days=now().weekday() + 1)).strftime('%b %d, %Y')
-        }}
-      prev_label: |
-        {{
-          (today_at("00:00") - timedelta(days=now().weekday() + 14)).strftime('%b %d')
-        }} – {{
-          (today_at("00:00") - timedelta(days=now().weekday() + 8)).strftime('%b %d, %Y')
-        }}
+
+  # =======================================================
+  # 1. Current-week total energy
+  # =======================================================
+
   - action: recorder.get_statistics
     data:
       start_time: "{{ week_start }}"
       end_time: "{{ week_end }}"
       period: day
       statistic_ids:
-        - sensor.ecomain_003516000993_local_main_all_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch1_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch2_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch3_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch4_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch6_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch7_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch8_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch9_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch10_energy_fwd_total
+        - !input main_energy
       types:
         - change
-    response_variable: current_stats
+      units:
+        energy: kWh
+    response_variable: current_main_stats
+
+
+  # =======================================================
+  # 2. Previous-week total energy
+  # =======================================================
+
   - action: recorder.get_statistics
     data:
-      start_time: "{{ prev_start }}"
-      end_time: "{{ prev_end }}"
+      start_time: "{{ previous_week_start }}"
+      end_time: "{{ previous_week_end }}"
       period: day
       statistic_ids:
-        - sensor.ecomain_003516000993_local_main_all_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch1_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch2_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch3_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch4_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch6_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch7_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch8_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch9_energy_fwd_total
-        - sensor.ecomain_003516000993_local_main_ch10_energy_fwd_total
+        - !input main_energy
       types:
         - change
-    response_variable: previous_stats
+      units:
+        energy: kWh
+    response_variable: previous_main_stats
+
+
+  # =======================================================
+  # 3. Current-week circuit statistics
+  # =======================================================
+
+  - action: recorder.get_statistics
+    data:
+      start_time: "{{ week_start }}"
+      end_time: "{{ week_end }}"
+      period: day
+      statistic_ids: !input monitored_circuits
+      types:
+        - change
+      units:
+        energy: kWh
+    response_variable: current_circuit_stats
+
+
+  # =======================================================
+  # 4. Previous-week circuit statistics
+  # =======================================================
+
+  - action: recorder.get_statistics
+    data:
+      start_time: "{{ previous_week_start }}"
+      end_time: "{{ previous_week_end }}"
+      period: day
+      statistic_ids: !input monitored_circuits
+      types:
+        - change
+      units:
+        energy: kWh
+    response_variable: previous_circuit_stats
+
+
+  # =======================================================
+  # 5. Calculate deterministic site KPIs in Home Assistant
+  # =======================================================
+
   - variables:
-      main: sensor.ecomain_003516000993_local_main_all_energy_fwd_total
-      current_kwh: |
+
+      current_total: >
         {{
-          (
-            current_stats.statistics[main]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
+          current_main_stats.statistics[main_stat]
+          | map(attribute='change')
+          | map('float')
+          | sum
+          | round(2)
         }}
-      previous_kwh: |
+
+      previous_total: >
         {{
-          (
-            previous_stats.statistics[main]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
+          previous_main_stats.statistics[main_stat]
+          | map(attribute='change')
+          | map('float')
+          | sum
+          | round(2)
         }}
-      wow: >
-        {% set c = current_kwh | float %} {% set p = previous_kwh | float %} {%
-        if p > 0 %}
-          {{ (((c - p) / p) * 100) | round(1) }}
+
+      daily_average: >
+        {% set days = current_main_stats.statistics[main_stat] | length %}
+        {% if days > 0 %}
+          {{
+            (
+              current_main_stats.statistics[main_stat]
+              | map(attribute='change')
+              | map('float')
+              | sum / days
+            ) | round(2)
+          }}
         {% else %}
           0
         {% endif %}
-      ch1: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch1_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch2: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch2_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch3: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch3_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch4: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch4_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch6: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch6_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch7: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch7_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch8: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch8_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch9: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch9_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
-      ch10: |
-        {{
-          (
-            current_stats.statistics[
-              'sensor.ecomain_003516000993_local_main_ch10_energy_fwd_total'
-            ]
-            | map(attribute='change')
-            | map('float')
-            | sum / 1000
-          ) | round(2)
-        }}
+
+      wow_change: >
+        {% set current = current_total | float %}
+        {% set previous = previous_total | float %}
+        {% if previous > 0 %}
+          {{ (((current - previous) / previous) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+
+
+  # =======================================================
+  # 6. AI analysis
+  # =======================================================
+
   - action: conversation.process
     data:
-      agent_id: conversation.deepseek
+      agent_id: !input ai_agent
+
       text: >
-        You are the AI energy analyst for the enecess smart energy management
-        system.
+        You are an AI energy analyst for an ecoMain smart energy
+        monitoring system.
 
-        CURRENT WEEK: {{ week_label }} PREVIOUS WEEK: {{ prev_label }}
+        SITE:
+        {{ site_name_value }}
 
-        Current total site energy: {{ current_kwh }} kWh Previous total site
-        energy: {{ previous_kwh }} kWh Week-on-week change: {{ wow }}%
+        CURRENT WEEK:
+        {{ week_label }}
 
-        CURRENT WEEK DATA: {{ current_stats }}
+        PREVIOUS WEEK:
+        {{ previous_week_label }}
 
-        PREVIOUS WEEK DATA: {{ previous_stats }}
+        HOME ASSISTANT CALCULATED VALUES:
 
-        DATA RULES: - main_all = total site electricity consumption. - CH1, CH2,
-        CH3, CH4, CH6, CH8, CH9, CH10 are normal monitored circuits. - CH5 is
-        not supplied. - CH7 is an R&D test circuit and must be reported
-        separately. - Source values are Wh; report in kWh. - Do not invent
-        appliance identities. - Do not invent causes for consumption changes. -
-        Do not assume high usage or large changes indicate faults. - Do not
-        infer standby loads or operating reasons without evidence. - Do not
-        assume circuit totals must equal main_all. - Do not expose raw Home
-        Assistant timestamps or raw data objects. - Treat {{ current_kwh }} kWh,
-        {{ previous_kwh }} kWh and {{ wow }}%
-          as authoritative.
-        - If no anomaly can be confirmed, state:
+        Current-week total:
+        {{ current_total }} kWh
+
+        Current-week daily average:
+        {{ daily_average }} kWh/day
+
+        Previous-week total:
+        {{ previous_total }} kWh
+
+        Week-on-week change:
+        {{ wow_change }}%
+
+        CURRENT-WEEK DAILY TOTAL ENERGY DATA:
+
+        {{ current_main_stats }}
+
+        CURRENT-WEEK CIRCUIT DATA:
+
+        {{ current_circuit_stats }}
+
+        PREVIOUS-WEEK CIRCUIT DATA:
+
+        {{ previous_circuit_stats }}
+
+        OPTIONAL USER CONTEXT:
+
+        {{ extra_context_value }}
+
+        RULES:
+
+        - Use only the supplied energy data and optional user context.
+        - Treat the Home Assistant calculated totals as authoritative.
+        - Do not invent appliance identities.
+        - Do not invent causes for changes in energy use.
+        - High consumption does not automatically mean abnormal consumption.
+        - Large week-on-week changes do not automatically indicate faults.
+        - Do not diagnose meter, CT or sensor faults without sufficient evidence.
+        - Do not assume the sum of monitored circuits must equal total energy.
+        - Do not expose raw Home Assistant timestamps.
+        - Do not expose raw statistics objects.
+        - If evidence is insufficient, state:
           "No confirmed abnormal energy use was detected."
 
-        Generate a concise Weekly Energy Report in this exact order:
+        Generate a concise weekly energy report with this structure:
 
-        1. THIS WEEK AT A GLANCE Show total energy, daily average, highest day,
-        lowest day, and largest normal monitored circuit.
+        1. THIS WEEK AT A GLANCE
+        - Total energy
+        - Daily average
+        - Highest-consumption day
+        - Lowest-consumption day
+        - Largest monitored circuit
 
-        2. DAILY ENERGY Show all 7 current-week days: Date | kWh Then give one
-        short sentence describing the weekly pattern.
+        2. DAILY ENERGY
+        - Show all seven days in a compact Date | kWh table
+        - Add one short sentence describing the weekly pattern
 
-        3. CIRCUIT BREAKDOWN Rank normal monitored circuits by current-week
-        energy use. Show: Circuit | kWh | Share Group zero-use circuits
-        together. Give up to 2 short observations.
+        3. CIRCUIT BREAKDOWN
+        - Rank active monitored circuits by weekly energy
+        - Show Circuit | kWh | Share
+        - Group zero-use circuits together
+        - Add no more than two short observations
 
-        4. WEEK-ON-WEEK Show: Current week | Previous week | Change Identify the
-        2 most meaningful circuit-level changes.
+        4. WEEK-ON-WEEK
+        - Current week
+        - Previous week
+        - Percentage change
+        - Identify the two most meaningful circuit-level changes
 
-        5. R&D TEST LOAD Report CH7 current week, previous week and change
-        separately.
+        5. AI INSIGHTS
+        Provide exactly three short insights:
+        - current-week energy pattern
+        - circuit-level pattern
+        - week-on-week interpretation
 
-        6. AI INSIGHTS Give exactly 3 concise insights: - current-week
-        consumption pattern - major normal circuit pattern - week-on-week
-        interpretation
+        6. ABNORMAL USE
+        One short paragraph only.
 
-        7. ABNORMAL USE One short paragraph only. Do not overdiagnose.
+        7. RECOMMENDATIONS
+        Provide exactly three concise, practical recommendations.
 
-        8. RECOMMENDATIONS Give exactly 3 short practical recommendations based
-        on the data.
+        Keep the report easy to scan.
+        Prefer tables and bullets over long paragraphs.
+        Write like a smart-energy product report, not a chatbot.
 
-        Keep the report easy to scan. Prefer short tables and bullets. Write
-        like a smart-energy product report, not a chatbot.
-
-        IMPORTANT: After the complete report, append exactly these two
-        machine-readable lines.
-
-        Each insight must be ONE sentence and no more than 120 characters.
-
-        DASH_PATTERN: <current-week consumption pattern> DASH_CIRCUIT: <major
-        normal circuit pattern>
-
-        Do not add any other DASH_ fields.
     response_variable: ai_report
-  - variables:
-      report_text: "{{ ai_report.response.speech.plain.speech }}"
-      insight_pattern: |
-        {% set x = report_text.split('DASH_PATTERN:') %} {% if x | length > 1 %}
-          {{ x[1].split('DASH_CIRCUIT:')[0] | trim }}
-        {% else %}
-          AI insight unavailable.
-        {% endif %}
-      insight_circuit: |
-        {% set x = report_text.split('DASH_CIRCUIT:') %} {% if x | length > 1 %}
-          {{ x[1].split('\n')[0] | trim }}
-        {% else %}
-          AI insight unavailable.
-        {% endif %}
-      insight_change: |
-        {% set change = wow | float %} {% if change < 0 %}
-          Total site energy decreased {{ change | abs }}% compared with the previous week.
-        {% elif change > 0 %}
-          Total site energy increased {{ change }}% compared with the previous week.
-        {% else %}
-          Total site energy was unchanged compared with the previous week.
-        {% endif %}
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_weekly_energy
-    data:
-      value: "{{ current_kwh }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.previous_week
-    data:
-      value: "{{ previous_kwh }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.weekly_change
-    data:
-      value: "{{ wow }}"
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.ecomain_weekly_report_period
-    data:
-      value: "{{ week_label }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch1_weekly_energy
-    data:
-      value: "{{ ch1 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch2_weekly_energy
-    data:
-      value: "{{ ch2 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch3_weekly_energy
-    data:
-      value: "{{ ch3 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch4_weekly_energy
-    data:
-      value: "{{ ch4 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch6_weekly_energy
-    data:
-      value: "{{ ch6 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch7_weekly_energy
-    data:
-      value: "{{ ch7 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch8_weekly_energy
-    data:
-      value: "{{ ch8 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch9_weekly_energy
-    data:
-      value: "{{ ch9 }}"
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.ecomain_ch10_weekly_energy
-    data:
-      value: "{{ ch10 }}"
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.ecomain_ai_weekly_pattern
-    data:
-      value: "{{ insight_pattern }}"
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.ecomain_ai_circuit_pattern
-    data:
-      value: "{{ insight_circuit }}"
+
+
+  # =======================================================
+  # 7. Show report in Home Assistant
+  # =======================================================
+
   - action: persistent_notification.create
     data:
-      title: |
+      title: >
         ecoMain Weekly Energy Report | {{ week_label }}
-      message: |
+      message: >
         {{ ai_report.response.speech.plain.speech }}
+
 mode: single
