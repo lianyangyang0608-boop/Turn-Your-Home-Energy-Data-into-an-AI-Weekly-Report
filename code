@@ -1,0 +1,368 @@
+alias: ecoMain Weekly Energy Report
+description: Auto weekly ecoMain energy report with DeepSeek analysis.
+triggers:
+  - trigger: time
+    at: "08:00:00"
+conditions:
+  - condition: template
+    value_template: "{{ now().weekday() == 0 }}"
+actions:
+  - variables:
+      week_start: |
+        {{ today_at("00:00") - timedelta(days=now().weekday() + 7) }}
+      week_end: |
+        {{ today_at("00:00") - timedelta(days=now().weekday()) }}
+      prev_start: |
+        {{ today_at("00:00") - timedelta(days=now().weekday() + 14) }}
+      prev_end: |
+        {{ today_at("00:00") - timedelta(days=now().weekday() + 7) }}
+      week_label: |
+        {{
+          (today_at("00:00") - timedelta(days=now().weekday() + 7)).strftime('%b %d')
+        }} – {{
+          (today_at("00:00") - timedelta(days=now().weekday() + 1)).strftime('%b %d, %Y')
+        }}
+      prev_label: |
+        {{
+          (today_at("00:00") - timedelta(days=now().weekday() + 14)).strftime('%b %d')
+        }} – {{
+          (today_at("00:00") - timedelta(days=now().weekday() + 8)).strftime('%b %d, %Y')
+        }}
+  - action: recorder.get_statistics
+    data:
+      start_time: "{{ week_start }}"
+      end_time: "{{ week_end }}"
+      period: day
+      statistic_ids:
+        - sensor.ecomain_003516000993_local_main_all_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch1_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch2_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch3_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch4_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch6_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch7_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch8_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch9_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch10_energy_fwd_total
+      types:
+        - change
+    response_variable: current_stats
+  - action: recorder.get_statistics
+    data:
+      start_time: "{{ prev_start }}"
+      end_time: "{{ prev_end }}"
+      period: day
+      statistic_ids:
+        - sensor.ecomain_003516000993_local_main_all_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch1_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch2_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch3_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch4_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch6_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch7_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch8_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch9_energy_fwd_total
+        - sensor.ecomain_003516000993_local_main_ch10_energy_fwd_total
+      types:
+        - change
+    response_variable: previous_stats
+  - variables:
+      main: sensor.ecomain_003516000993_local_main_all_energy_fwd_total
+      current_kwh: |
+        {{
+          (
+            current_stats.statistics[main]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      previous_kwh: |
+        {{
+          (
+            previous_stats.statistics[main]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      wow: >
+        {% set c = current_kwh | float %} {% set p = previous_kwh | float %} {%
+        if p > 0 %}
+          {{ (((c - p) / p) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+      ch1: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch1_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch2: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch2_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch3: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch3_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch4: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch4_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch6: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch6_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch7: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch7_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch8: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch8_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch9: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch9_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+      ch10: |
+        {{
+          (
+            current_stats.statistics[
+              'sensor.ecomain_003516000993_local_main_ch10_energy_fwd_total'
+            ]
+            | map(attribute='change')
+            | map('float')
+            | sum / 1000
+          ) | round(2)
+        }}
+  - action: conversation.process
+    data:
+      agent_id: conversation.deepseek
+      text: >
+        You are the AI energy analyst for the enecess smart energy management
+        system.
+
+        CURRENT WEEK: {{ week_label }} PREVIOUS WEEK: {{ prev_label }}
+
+        Current total site energy: {{ current_kwh }} kWh Previous total site
+        energy: {{ previous_kwh }} kWh Week-on-week change: {{ wow }}%
+
+        CURRENT WEEK DATA: {{ current_stats }}
+
+        PREVIOUS WEEK DATA: {{ previous_stats }}
+
+        DATA RULES: - main_all = total site electricity consumption. - CH1, CH2,
+        CH3, CH4, CH6, CH8, CH9, CH10 are normal monitored circuits. - CH5 is
+        not supplied. - CH7 is an R&D test circuit and must be reported
+        separately. - Source values are Wh; report in kWh. - Do not invent
+        appliance identities. - Do not invent causes for consumption changes. -
+        Do not assume high usage or large changes indicate faults. - Do not
+        infer standby loads or operating reasons without evidence. - Do not
+        assume circuit totals must equal main_all. - Do not expose raw Home
+        Assistant timestamps or raw data objects. - Treat {{ current_kwh }} kWh,
+        {{ previous_kwh }} kWh and {{ wow }}%
+          as authoritative.
+        - If no anomaly can be confirmed, state:
+          "No confirmed abnormal energy use was detected."
+
+        Generate a concise Weekly Energy Report in this exact order:
+
+        1. THIS WEEK AT A GLANCE Show total energy, daily average, highest day,
+        lowest day, and largest normal monitored circuit.
+
+        2. DAILY ENERGY Show all 7 current-week days: Date | kWh Then give one
+        short sentence describing the weekly pattern.
+
+        3. CIRCUIT BREAKDOWN Rank normal monitored circuits by current-week
+        energy use. Show: Circuit | kWh | Share Group zero-use circuits
+        together. Give up to 2 short observations.
+
+        4. WEEK-ON-WEEK Show: Current week | Previous week | Change Identify the
+        2 most meaningful circuit-level changes.
+
+        5. R&D TEST LOAD Report CH7 current week, previous week and change
+        separately.
+
+        6. AI INSIGHTS Give exactly 3 concise insights: - current-week
+        consumption pattern - major normal circuit pattern - week-on-week
+        interpretation
+
+        7. ABNORMAL USE One short paragraph only. Do not overdiagnose.
+
+        8. RECOMMENDATIONS Give exactly 3 short practical recommendations based
+        on the data.
+
+        Keep the report easy to scan. Prefer short tables and bullets. Write
+        like a smart-energy product report, not a chatbot.
+
+        IMPORTANT: After the complete report, append exactly these two
+        machine-readable lines.
+
+        Each insight must be ONE sentence and no more than 120 characters.
+
+        DASH_PATTERN: <current-week consumption pattern> DASH_CIRCUIT: <major
+        normal circuit pattern>
+
+        Do not add any other DASH_ fields.
+    response_variable: ai_report
+  - variables:
+      report_text: "{{ ai_report.response.speech.plain.speech }}"
+      insight_pattern: |
+        {% set x = report_text.split('DASH_PATTERN:') %} {% if x | length > 1 %}
+          {{ x[1].split('DASH_CIRCUIT:')[0] | trim }}
+        {% else %}
+          AI insight unavailable.
+        {% endif %}
+      insight_circuit: |
+        {% set x = report_text.split('DASH_CIRCUIT:') %} {% if x | length > 1 %}
+          {{ x[1].split('\n')[0] | trim }}
+        {% else %}
+          AI insight unavailable.
+        {% endif %}
+      insight_change: |
+        {% set change = wow | float %} {% if change < 0 %}
+          Total site energy decreased {{ change | abs }}% compared with the previous week.
+        {% elif change > 0 %}
+          Total site energy increased {{ change }}% compared with the previous week.
+        {% else %}
+          Total site energy was unchanged compared with the previous week.
+        {% endif %}
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_weekly_energy
+    data:
+      value: "{{ current_kwh }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.previous_week
+    data:
+      value: "{{ previous_kwh }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.weekly_change
+    data:
+      value: "{{ wow }}"
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.ecomain_weekly_report_period
+    data:
+      value: "{{ week_label }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch1_weekly_energy
+    data:
+      value: "{{ ch1 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch2_weekly_energy
+    data:
+      value: "{{ ch2 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch3_weekly_energy
+    data:
+      value: "{{ ch3 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch4_weekly_energy
+    data:
+      value: "{{ ch4 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch6_weekly_energy
+    data:
+      value: "{{ ch6 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch7_weekly_energy
+    data:
+      value: "{{ ch7 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch8_weekly_energy
+    data:
+      value: "{{ ch8 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch9_weekly_energy
+    data:
+      value: "{{ ch9 }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.ecomain_ch10_weekly_energy
+    data:
+      value: "{{ ch10 }}"
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.ecomain_ai_weekly_pattern
+    data:
+      value: "{{ insight_pattern }}"
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.ecomain_ai_circuit_pattern
+    data:
+      value: "{{ insight_circuit }}"
+  - action: persistent_notification.create
+    data:
+      title: |
+        ecoMain Weekly Energy Report | {{ week_label }}
+      message: |
+        {{ ai_report.response.speech.plain.speech }}
+mode: single
