@@ -318,7 +318,7 @@ An example report can highlight:
 If the available data does not provide enough evidence to confirm abnormal energy use, the AI is instructed to state:
 
 > **No confirmed abnormal energy use was detected.**
-
+![ecoMain AI Energy Dashboard](images/ecomain_weekly_energy_report.png)
 This helps reduce overinterpretation of normal changes in energy consumption.
 
 ---
@@ -427,32 +427,6 @@ For a similar setup, the basic components are:
 
 ---
 
-# Example Automation
-
-The full automation can be placed in:
-
-```text
-automation/weekly_energy_report.yaml
-```
-
-Before sharing publicly, replace your real ecoMain device ID with an example ID.
-
-For example, change:
-
-```text
-sensor.ecomain_003516000993_local_main_all_energy_fwd_total
-```
-
-to something like:
-
-```text
-sensor.ecomain_device_main_all_energy_fwd_total
-```
-
-Users can then replace the example IDs with the entity IDs from their own ecoMain installation.
-
----
-
 # What's Next?
 
 This example focuses on weekly electricity consumption and circuit-level analysis.
@@ -504,4 +478,5 @@ The example data shown in this project comes from a development and demonstratio
 ecoMain is part of the enecess smart energy management ecosystem.
 
 For more information about ecoMain and related energy-management products, visit the official enecess website.
+https://www.enecess.com/
 ```
