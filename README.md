@@ -5,7 +5,7 @@ Turn the energy statistics already stored in Home Assistant into an automatic we
 I built this Blueprint because I wanted a quicker way to review weekly energy use without opening several charts and comparing every circuit manually.
 
 
-| At a glance | |
+| At a glance ||
 |---|---|
 | **Schedule** | Runs on Monday at the time you choose |
 | **Reporting period** | Previous complete Monday–Sunday week |
