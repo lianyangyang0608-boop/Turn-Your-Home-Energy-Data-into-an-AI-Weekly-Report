@@ -1,34 +1,23 @@
-# ⚡ Turn Your Home Energy Data into an AI Weekly Report
+# ⚡ AI Weekly Energy Report for Home Assistant
 
-### Automated energy insights with ecoMain, Home Assistant and AI
+Turn your Home Assistant energy statistics into an automatic weekly AI summary.
 
-Energy monitoring gives you data.
+I built this Blueprint because I wanted a quicker way to review weekly energy use without manually checking multiple charts every time.
 
-But understanding what that data means still takes time.
+It works with any smart meter that exposes suitable energy statistics to Home Assistant.  
+In my setup, I used an enecess ecoMain, but other meters can work too.
 
-This project turns **ecoMain energy measurements** into an automatically generated **AI Weekly Energy Report** using Home Assistant and a compatible AI conversation agent.
-
-The workflow automatically:
-
-- collects the latest complete week of energy data
-- compares it with the previous week
-- analyzes monitored circuit consumption
-- identifies meaningful energy-use patterns
-- generates AI-powered insights and recommendations
-- delivers a complete weekly energy report
-
-![ecoMain AI Energy Dashboard](images/Hero.png)
-
-> **Dashboard shown for demonstration purposes.**
->
-> The Blueprint generates the weekly energy analysis and report automatically.
-> The dashboard above is an optional visualization layer and is not required to use the Blueprint.
-
----
 
 # ✨ What It Does
 
-Every Monday, the automation automatically analyzes the previous complete week.
+Every week, the Blueprint automatically:
+
+- reads the previous complete week
+- compares it with the week before
+- summarizes daily energy use
+- compares selected circuits
+- sends structured statistics to a Conversation Agent
+- generates a weekly report
 
 ```text
 ecoMain
@@ -88,25 +77,31 @@ The AI does **not** replace energy measurement or statistical processing.
 
 Before importing the Blueprint, you need:
 
-- **ecoMain** energy monitor
 - **Home Assistant**
-- ecoMain energy entities available in Home Assistant
-- Home Assistant Recorder / statistics
-- a compatible **Home Assistant Conversation Agent**
+- A smart energy meter with **energy statistics**
+- Long-term statistics enabled
+- A compatible **Home Assistant Conversation Agent**
 - an API key or local model required by your selected AI provider
 - **HACS** if your chosen AI integration is installed through HACS
 
-The dashboard shown in this repository is optional.
+Examples of suitable meters include:
+- enecess ecoMain
+- Shelly Pro 3EM
+- IoTaWatt
+- Eastron SDM-series meters
+- other meters that expose cumulative energy data to Home Assistant
+
+The Blueprint does not directly depend on a specific meter.
 
 ---
 
-# 🤖 AI Conversation Agent
+## 🤖 AI Conversation Agent
 
 The Blueprint uses Home Assistant's `conversation.process` action to send the weekly energy statistics to a selected Conversation Agent.
 
 This means the project is **not tied to one specific AI model**.
 
-## DeepSeek used in this demo
+### DeepSeek used in this demo
 
 The demonstration shown in this repository uses **DeepSeek Conversation** as the AI conversation agent.
 
@@ -145,13 +140,22 @@ Import the Blueprint into Home Assistant and create a new automation from it.
 
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2Flianyangyang0608-boop%2FTurn-Your-Home-Energy-Data-into-an-AI-Weekly-Report%2Frefs%2Fheads%2Fmain%2Fcode)
 
-The setup interface allows you to select your own ecoMain entities and AI Conversation Agent.
+You mainly need to configure:
+
+| Setting | What to select |
+|---|---|
+| **Total Energy Statistic** | Your whole-home energy entity |
+| **Monitored Circuits** | The circuits you want included in the weekly analysis |
+| **Conversation Agent** | Your Home Assistant AI / Conversation Agent |
+| **Weekly Report Time** | When the weekly report should run |
+| **Site Name** | Optional name shown in the report |
+| **Energy Context** | Optional descriptions for known circuits |
+
+> **Do not copy the entity IDs from my setup.**  
+> Select the entities from your own Home Assistant installation.
 
 ![Blueprint Setup](images/Blueprint-Setup.png)
 
-The Blueprint does not require the entity IDs used in this demonstration.
-
-Instead, select the appropriate sensors from **your own ecoMain installation**.
 
 ---
 
